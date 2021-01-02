@@ -1,0 +1,96 @@
+---
+title: "Insurance"
+author: "Dading Shi"
+date: "4/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+library(tidyverse)
+library(ggplot2)
+library(maps)
+library(corrplot)
+library(dplyr)
+library(xtable)
+library(stargazer)
+data <- read.csv("insurance.csv")
+data
+#3 numerical values, 3 categorical values
+```
+
+
+```{r}
+#Plot the distribution of different variables
+x <- data$age
+h<-hist(x, breaks=10, col="Orange", xlab="Age",
+   main="Age's Histogram with Normal Curve")
+xfit<-seq(min(x),max(x),length=40)
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+lines(xfit, yfit, col="blue", lwd=2)
+#Age
+
+
+y <- data$bmi
+h<-hist(y, breaks=10, col="Orange", xlab="BMI",
+   main="BMI's Histogram with Normal Curve")
+xfit<-seq(min(y),max(y),length=40)
+yfit<-dnorm(xfit,mean=mean(y),sd=sd(y))
+yfit <- yfit*diff(h$mids[1:2])*length(y)
+lines(xfit, yfit, col="blue", lwd=2)
+
+y2 <- data$children
+h<-hist(y2, breaks=10, col="Orange", xlab="Children",
+   main="Children's Histogram with Normal Curve")
+xfit<-seq(min(y2),max(y2),length=40)
+yfit<-dnorm(xfit,mean=mean(y2),sd=sd(y2))
+yfit <- yfit*diff(h$mids[1:2])*length(y2)
+lines(xfit, yfit, col="blue", lwd=2)
+
+y3 <- data$charges
+h<-hist(y3, breaks=10, col="Orange", xlab="Charges",
+   main="Charges' Histogram with Normal Curve")
+xfit<-seq(min(y3),max(y3),length=40)
+yfit<-dnorm(xfit,mean=mean(y3),sd=sd(y3))
+yfit <- yfit*diff(h$mids[1:2])*length(y3)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+
+```{r}
+#Test linearity
+
+# Basic scatter plot
+ggplot(data, aes(x=age, y=charges)) + geom_point(size = 2) + geom_smooth(method=lm)+
+  ggtitle("Scatterplot of Age and Charges")
+
+ggplot(data, aes(x=bmi, y=charges)) + geom_point(size = 2) + geom_smooth(method=lm)+
+  ggtitle("Scatterplot of BMI and Charges")
+
+ggplot(data, aes(x=children, y=charges)) + geom_point(size = 2) + geom_smooth(method=lm)+
+  ggtitle("Scatterplot of Children and Charges")
+
+
+```
+
+
+
+```{r}
+#Test multicolinearity. Since we have multiple categorical variables, we should calculate the VIF directily
+library(car)
+vif(lm(charges ~ age + sex + bmi + children + smoker + region, data = data))
+
+```
+```{r}
+#Building regression model
+model <- lm(charges ~ age + sex + bmi + children + smoker + region, data = data)
+summary(model)
+```
+
+```{r,results='asis'}
+stargazer(model, type="html", 
+          title= "Summary of the Results of the Regression Model", align=TRUE,
+          covariate.labels = c("Age","Sex(Male)", "BMI"," Children", "Smoker(yes)", "Northwest", "Southeast", "Southwest"),
+          out = "reg_table.html",digits=2)
+```
+
